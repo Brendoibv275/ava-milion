@@ -1,26 +1,206 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.58 0.18 250);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.16 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.58 0.18 250);
+  --accent-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.58 0.18 250);
+  --destructive: oklch(0.55 0.22 20);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    background-color: oklch(0.08 0 0);
+    color: oklch(0.98 0 0);
+    min-height: 100%;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  input,
+  textarea,
+  select {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid oklch(0.58 0.18 250);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-blue {
+    background: rgba(1, 111, 230, 0.08);
+    border: 1px solid rgba(1, 111, 230, 0.2);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 30px rgba(1, 111, 230, 0.25);
+  }
+
+  .gradient-blue {
+    background: linear-gradient(135deg, #016FE6 0%, #5B4DFF 100%);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #016FE6, #7B61FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease forwards;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .glass,
+  .glass-blue {
+    background: transparent !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+
+  .animate-fade-in,
+  .animate-scale-in {
+    animation: none !important;
+  }
+
+  /* Hide sidebar and reset margin */
+  main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  nav,
+  button,
+  .print\:hidden,
+  aside,
+  [style*="width: 16rem"],
+  .w-64 {
+    display: none !important;
+  }
+
+  * {
+    color: black !important;
+    text-shadow: none !important;
+  }
 }
