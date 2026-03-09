@@ -8,17 +8,31 @@ import { SUGESTOES_AULA } from "@/lib/utils";
 
 export default function AvaliacoesPage() {
     const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
+    const [atendentes, setAtendentes] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filtro, setFiltro] = useState("TODOS");
     const [periodo, setPeriodo] = useState("30");
+    const [dataInicio, setDataInicio] = useState("");
+    const [dataFim, setDataFim] = useState("");
+    const [atendenteId, setAtendenteId] = useState("");
     const [detalhesSelecionados, setDetalhesSelecionados] = useState<any>(null);
 
     useEffect(() => {
         setLoading(true);
-        let url = `/api/avaliacoes?dias=${periodo === 'tudo' ? '' : periodo}`;
-        if (filtro !== "TODOS") {
-            url += `&tipo=${filtro}`;
+        const params = new URLSearchParams();
+
+        if (periodo !== "tudo") {
+            params.set("dias", periodo);
         }
+
+        if (filtro !== "TODOS") {
+            params.set("tipo", filtro);
+        }
+        if (dataInicio) params.set("dataInicio", dataInicio);
+        if (dataFim) params.set("dataFim", dataFim);
+        if (atendenteId) params.set("atendenteId", atendenteId);
+
+        const url = `/api/avaliacoes?${params.toString()}`;
 
         fetch(url)
             .then((r) => r.json())
@@ -26,16 +40,41 @@ export default function AvaliacoesPage() {
                 setAvaliacoes(data);
                 setLoading(false);
             });
-    }, [filtro, periodo]);
+    }, [filtro, periodo, dataInicio, dataFim, atendenteId]);
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (filtro !== "TODOS") {
+            params.set("suporte", filtro);
+        }
+
+        const url = `/api/atendentes${params.toString() ? `?${params.toString()}` : ""}`;
+
+        fetch(url)
+            .then((r) => r.json())
+            .then((data) => {
+                const lista = Array.isArray(data) ? data : [];
+                setAtendentes(lista);
+                if (atendenteId && !lista.some((a: any) => a.id === atendenteId)) {
+                    setAtendenteId("");
+                }
+            });
+    }, [filtro]);
 
     const exportarCSV = () => {
         if (avaliacoes.length === 0) return;
+
+        const formatarMotivoContato = (avaliacao: any) => {
+            if (avaliacao.tipo === "AULA") return avaliacao.motivoContato || "";
+            if (avaliacao.motivoContato === "outros") return avaliacao.motivoOutros || "";
+            return (avaliacao.motivoContato || "").replace(/_/g, " ");
+        };
 
         const cabecalho = [
             "ID", "Data", "Tipo", "Nome Cliente", "Email Cliente",
             "Motivo Contato", "Motivo Outros", "Problema Resolvido",
             "Atendente", "Nota", "Opiniao Pessoal", "Sugestoes",
-            "Sugestoes Outros", "Recomenda"
+            "Sugestoes Outros", "Recomenda", "Circle Nota", "Circle Sugestoes"
         ].join(",");
 
         const linhas = avaliacoes.map(a => {
@@ -53,7 +92,7 @@ export default function AvaliacoesPage() {
                 a.tipo,
                 `"${a.nomeCliente || ''}"`,
                 `"${a.emailCliente || ''}"`,
-                a.motivoContato,
+                `"${formatarMotivoContato(a).replace(/"/g, '""')}"`,
                 `"${(a.motivoOutros || '').replace(/"/g, '""')}"`,
                 a.problemaResolvido,
                 `"${(a.atendentes?.nome || '').replace(/"/g, '""')}"`,
@@ -61,7 +100,9 @@ export default function AvaliacoesPage() {
                 `"${(a.opiniaoPessoal || '').replace(/"/g, '""')}"`,
                 `"${sugestoesFormatadas}"`,
                 `"${(a.sugestoesOutros || '').replace(/"/g, '""')}"`,
-                a.recomenda === true ? 'SIM' : a.recomenda === false ? 'NAO' : ''
+                a.recomenda === true ? 'SIM' : a.recomenda === false ? 'NAO' : '',
+                a.circleNota ?? '',
+                `"${(a.circleSugestoes || '').replace(/"/g, '""')}"`
             ].join(",");
         });
 
@@ -73,6 +114,18 @@ export default function AvaliacoesPage() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const getNotaClasses = (tipo: string, nota: number) => {
+        if (tipo === "AULA") {
+            if (nota >= 4) return "border-green-500/30 text-green-400 bg-green-500/10";
+            if (nota >= 3) return "border-yellow-500/30 text-yellow-500 bg-yellow-500/10";
+            return "border-red-500/30 text-red-400 bg-red-500/10";
+        }
+
+        if (nota >= 8) return "border-green-500/30 text-green-400 bg-green-500/10";
+        if (nota >= 5) return "border-yellow-500/30 text-yellow-500 bg-yellow-500/10";
+        return "border-red-500/30 text-red-400 bg-red-500/10";
     };
 
     return (
@@ -126,6 +179,65 @@ export default function AvaliacoesPage() {
                     </div>
                 </div>
 
+                <div className="glass rounded-2xl border border-white/10 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Filter className="w-4 h-4 text-gray-400" />
+                        <h2 className="text-sm font-semibold text-gray-200">Filtros Avançados</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Data inicial</label>
+                            <input
+                                type="date"
+                                value={dataInicio}
+                                onChange={(e) => setDataInicio(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Data final</label>
+                            <input
+                                type="date"
+                                value={dataFim}
+                                onChange={(e) => setDataFim(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Atendente</label>
+                            <select
+                                value={atendenteId}
+                                onChange={(e) => setAtendenteId(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
+                            >
+                                <option value="">Todos</option>
+                                {atendentes.map((atendente) => (
+                                    <option key={atendente.id} value={atendente.id}>
+                                        {atendente.nome}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex items-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDataInicio("");
+                                    setDataFim("");
+                                    setAtendenteId("");
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 transition-colors"
+                            >
+                                Limpar filtros avançados
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -156,7 +268,11 @@ export default function AvaliacoesPage() {
                                                 <p className="text-xs text-blue-400">{A.emailCliente}</p>
                                             </td>
                                             <td className="p-4 text-gray-300 text-sm max-w-[200px] truncate" title={A.motivoContato}>
-                                                {A.motivoContato === "outros" ? A.motivoOutros : A.motivoContato.replace(/_/g, " ")}
+                                                {A.tipo === "AULA"
+                                                    ? A.motivoContato
+                                                    : A.motivoContato === "outros"
+                                                        ? A.motivoOutros
+                                                        : A.motivoContato.replace(/_/g, " ")}
                                             </td>
                                             <td className="p-4 text-sm font-medium text-gray-200">{A.atendentes?.nome}</td>
                                             <td className="p-4">
@@ -169,10 +285,7 @@ export default function AvaliacoesPage() {
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-3">
-                                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-bold border ${A.nota >= 8 ? "border-green-500/30 text-green-400 bg-green-500/10" :
-                                                        A.nota >= 5 ? "border-yellow-500/30 text-yellow-500 bg-yellow-500/10" :
-                                                            "border-red-500/30 text-red-400 bg-red-500/10"
-                                                        }`}>
+                                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-bold border ${getNotaClasses(A.tipo, A.nota)}`}>
                                                         {A.nota} <Star className="w-3.5 h-3.5 fill-current" />
                                                     </div>
                                                     <button
@@ -203,10 +316,7 @@ export default function AvaliacoesPage() {
                                     {format(new Date(detalhesSelecionados.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} - {detalhesSelecionados.tipo}
                                 </p>
                             </div>
-                            <div className={`px-4 py-2 rounded-xl border text-lg font-black ${detalhesSelecionados.nota >= 8 ? "border-green-500/30 text-green-400 bg-green-500/10" :
-                                detalhesSelecionados.nota >= 5 ? "border-yellow-500/30 text-yellow-500 bg-yellow-500/10" :
-                                    "border-red-500/30 text-red-400 bg-red-500/10"
-                                }`}>
+                            <div className={`px-4 py-2 rounded-xl border text-lg font-black ${getNotaClasses(detalhesSelecionados.tipo, detalhesSelecionados.nota)}`}>
                                 Nota {detalhesSelecionados.nota}
                             </div>
                         </div>
@@ -219,7 +329,9 @@ export default function AvaliacoesPage() {
                                     <p className="text-blue-400 text-sm">{detalhesSelecionados.emailCliente}</p>
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Atendimento</span>
+                                    <span className="text-xs text-gray-500 uppercase font-bold block mb-1">
+                                        {detalhesSelecionados.tipo === "AULA" ? "Professor" : "Atendimento"}
+                                    </span>
                                     <p className="text-white font-medium">{detalhesSelecionados.atendentes?.nome}</p>
                                     <p className="text-gray-400 text-sm">Problema resolvido: {detalhesSelecionados.problemaResolvido}</p>
                                 </div>
@@ -228,7 +340,9 @@ export default function AvaliacoesPage() {
                             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                 <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Motivo do Contato</span>
                                 <p className="text-white">
-                                    {detalhesSelecionados.motivoContato === "outros"
+                                    {detalhesSelecionados.tipo === "AULA"
+                                        ? detalhesSelecionados.motivoContato || "Não especificado"
+                                        : detalhesSelecionados.motivoContato === "outros"
                                         ? detalhesSelecionados.motivoOutros || "Não especificado"
                                         : detalhesSelecionados.motivoContato.replace(/_/g, " ")}
                                 </p>
@@ -266,6 +380,22 @@ export default function AvaliacoesPage() {
                                     <p className={`font-bold ${detalhesSelecionados.recomenda ? 'text-green-400' : 'text-red-400'}`}>
                                         {detalhesSelecionados.recomenda ? "Sim" : "Não"}
                                     </p>
+                                </div>
+                            )}
+
+                            {(detalhesSelecionados.circleNota !== null || detalhesSelecionados.circleSugestoes) && (
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                                    <span className="text-xs text-gray-500 uppercase font-bold block mb-2">Comunidade (Circle)</span>
+                                    {detalhesSelecionados.circleNota !== null && (
+                                        <p className="text-white text-sm">
+                                            <span className="text-gray-400">Nota:</span> {detalhesSelecionados.circleNota}
+                                        </p>
+                                    )}
+                                    {detalhesSelecionados.circleSugestoes && (
+                                        <p className="text-white text-sm mt-2">
+                                            <span className="text-gray-400">Sugestões:</span> {detalhesSelecionados.circleSugestoes}
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

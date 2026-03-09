@@ -31,10 +31,16 @@ CREATE TABLE public.avaliacoes_atendimento (
     "motivoOutros" text,
     "problemaResolvido" text NOT NULL CHECK ("problemaResolvido" IN ('SIM', 'NAO', 'PARCIALMENTE')),
     "atendenteId" uuid NOT NULL REFERENCES public.atendentes(id) ON DELETE RESTRICT,
-    nota integer NOT NULL CHECK (nota >= 0 AND nota <= 10),
+    nota integer NOT NULL CHECK (
+        (tipo = 'AULA' AND nota >= 1 AND nota <= 5)
+        OR
+        (tipo IN ('SISTEMA', 'MENTORIA') AND nota >= 0 AND nota <= 10)
+    ),
     "opiniaoPessoal" text,
     sugestoes jsonb,
     "sugestoesOutros" text,
+    "circleNota" integer CHECK ("circleNota" >= 0 AND "circleNota" <= 10),
+    "circleSugestoes" text,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

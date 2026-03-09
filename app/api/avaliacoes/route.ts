@@ -17,12 +17,33 @@ export async function POST(req: Request) {
             sugestoes,
             sugestoesOutros,
             recomenda,
+            circleNota,
+            circleSugestoes,
         } = body;
 
         const supabase = await createClient();
 
         if (!tipo || !nomeCliente || !emailCliente || !motivoContato || !problemaResolvido || !atendenteId || nota === undefined) {
             return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
+        }
+
+        const circleNotaNormalizada =
+            tipo === "SISTEMA" || tipo === "MENTORIA"
+                ? (circleNota === null || circleNota === undefined || circleNota === "" ? null : Number(circleNota))
+                : null;
+        const notaNormalizada = Number(nota);
+
+        if (Number.isNaN(notaNormalizada)) {
+            return NextResponse.json({ error: "Nota inválida" }, { status: 400 });
+        }
+        if (tipo === "AULA" && (notaNormalizada < 1 || notaNormalizada > 5)) {
+            return NextResponse.json({ error: "A avaliação da aula deve ser entre 1 e 5" }, { status: 400 });
+        }
+        if ((tipo === "SISTEMA" || tipo === "MENTORIA") && (notaNormalizada < 0 || notaNormalizada > 10)) {
+            return NextResponse.json({ error: "A nota do atendimento deve ser entre 0 e 10" }, { status: 400 });
+        }
+        if (circleNotaNormalizada !== null && (Number.isNaN(circleNotaNormalizada) || circleNotaNormalizada < 0 || circleNotaNormalizada > 10)) {
+            return NextResponse.json({ error: "Nota da comunidade inválida" }, { status: 400 });
         }
 
         const { data: avaliacao, error } = await supabase
@@ -35,11 +56,13 @@ export async function POST(req: Request) {
                 motivoOutros: motivoOutros || null,
                 problemaResolvido,
                 atendenteId,
-                nota: Number(nota),
+                nota: notaNormalizada,
                 opiniaoPessoal: opiniaoPessoal || null,
                 sugestoes: sugestoes && sugestoes.length > 0 ? sugestoes : null,
                 sugestoesOutros: sugestoesOutros || null,
                 recomenda: recomenda === "SIM" ? true : false,
+                circleNota: circleNotaNormalizada,
+                circleSugestoes: tipo === "SISTEMA" || tipo === "MENTORIA" ? (circleSugestoes || null) : null,
             })
             .select()
             .single();
@@ -59,6 +82,8 @@ export async function GET(req: Request) {
         const tipo = searchParams.get("tipo");
         const atendenteId = searchParams.get("atendenteId");
         const dias = searchParams.get("dias");
+        const dataInicio = searchParams.get("dataInicio");
+        const dataFim = searchParams.get("dataFim");
 
         const supabase = await createClient();
 
@@ -73,10 +98,26 @@ export async function GET(req: Request) {
         if (tipo) query = query.eq("tipo", tipo);
         if (atendenteId) query = query.eq("atendenteId", atendenteId);
 
-        if (dias && dias !== "tudo") {
+        if (dataInicio) {
+            const inicio = new Date(`${dataInicio}T00:00:00`);
+            if (!Number.isNaN(inicio.getTime())) {
+                query = query.gte("created_at", inicio.toISOString());
+            }
+        }
+
+        if (dataFim) {
+            const fim = new Date(`${dataFim}T23:59:59.999`);
+            if (!Number.isNaN(fim.getTime())) {
+                query = query.lte("created_at", fim.toISOString());
+            }
+        }
+
+        if (!dataInicio && !dataFim && dias && dias !== "tudo") {
             const d = parseInt(dias);
-            const sinceDate = new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString();
-            query = query.gte("created_at", sinceDate);
+            if (!Number.isNaN(d)) {
+                const sinceDate = new Date(Date.now() - d * 24 * 60 * 60 * 1000).toISOString();
+                query = query.gte("created_at", sinceDate);
+            }
         }
 
         const { data: avaliacoes, error } = await query;

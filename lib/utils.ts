@@ -20,6 +20,8 @@ export function formatDateShort(date: Date | string): string {
     }).format(new Date(date));
 }
 
+export type TipoSuporte = "SISTEMA" | "MENTORIA" | "AULA";
+
 export const MOTIVOS_CONTATO = [
     { value: "suporte_tecnico", label: "🔧 Suporte Técnico" },
     { value: "cancelamento", label: "❌ Cancelamento" },
@@ -30,6 +32,12 @@ export const MOTIVOS_CONTATO = [
     { value: "troca_plano", label: "🔄 Troca de plano / Upgrade" },
     { value: "nota_fiscal", label: "🧾 Nota fiscal / Documentação" },
     { value: "outros", label: "📝 Outros" },
+] as const;
+
+export const MOTIVOS_CONTATO_SUPORTE = [
+    ...MOTIVOS_CONTATO,
+    { value: "criacao_conteudo", label: "🧠 Criação de conteúdo" },
+    { value: "criacao_site_dominios", label: "🌐 Criação de Site/Domínios" },
 ] as const;
 
 export const SUGESTOES_AULA = [
@@ -49,3 +57,8 @@ export const LABEL_SUPORTE: Record<string, string> = {
     MENTORIA: "Suporte Mentoria",
     AULA: "Avaliação de Aula",
 };
+
+export function getMotivosContatoByTipo(tipo: TipoSuporte) {
+    if (tipo === "AULA") return [];
+    return MOTIVOS_CONTATO_SUPORTE;
+}

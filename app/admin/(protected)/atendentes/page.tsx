@@ -55,13 +55,13 @@ export default function AtendentesPage() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-white">Equipe de Atendimento</h1>
-                        <p className="text-gray-400 mt-1">Gerencie os atendentes e seus canais de suporte.</p>
+                        <p className="text-gray-400 mt-1">Gerencie atendentes e professores por canal de suporte/aula.</p>
                     </div>
                     <button
                         onClick={() => setNovoModal(true)}
                         className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 glow-blue"
                     >
-                        <Plus className="w-5 h-5" /> Adicionar Atendente
+                        <Plus className="w-5 h-5" /> Adicionar Atendente/Professor
                     </button>
                 </div>
 
@@ -117,7 +117,7 @@ export default function AtendentesPage() {
             {novoModal && (
                 <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto flex justify-center pt-10 px-4 pb-10">
                     <form onSubmit={handleSalvar} className="glass p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl animate-scale-in h-fit relative">
-                        <h2 className="text-xl font-bold text-white mb-6">Novo Atendente</h2>
+                        <h2 className="text-xl font-bold text-white mb-6">Novo Atendente/Professor</h2>
 
                         <div className="space-y-4">
                             <div>
