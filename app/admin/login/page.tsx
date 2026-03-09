@@ -39,6 +39,28 @@ function getRegisterErrorMessage(err: unknown): string {
     return defaultMsg;
 }
 
+function getLoginErrorMessage(err: unknown): string {
+    const defaultMsg = "Email ou senha inválidos. Tente novamente.";
+    if (!err || typeof err !== "object") return defaultMsg;
+
+    const errorObj = err as { message?: string; status?: number };
+    const rawMessage = (errorObj.message || "").toLowerCase();
+
+    if (rawMessage.includes("email not confirmed")) {
+        return "Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada ou solicite novo cadastro.";
+    }
+    if (rawMessage.includes("invalid login credentials")) {
+        return "Email ou senha inválidos. Tente novamente.";
+    }
+    if (rawMessage.includes("too many requests") || errorObj.status === 429) {
+        return "Muitas tentativas de login. Aguarde alguns minutos e tente novamente.";
+    }
+    if (rawMessage) {
+        return `Não foi possível entrar: ${errorObj.message}`;
+    }
+    return defaultMsg;
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const supabase = createClient();
@@ -117,7 +139,8 @@ export default function LoginPage() {
                     setError(getRegisterErrorMessage(err));
                 }
             } else {
-                setError("Email ou senha inválidos. Tente novamente.");
+                console.error("Erro detalhado no login admin:", err);
+                setError(getLoginErrorMessage(err));
             }
         } finally {
             setLoading(false);

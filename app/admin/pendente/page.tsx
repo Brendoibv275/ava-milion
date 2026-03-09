@@ -30,7 +30,7 @@ export default function PendentePage() {
                 <h1 className="text-3xl font-bold mb-4 text-white">Conta em análise</h1>
                 <p className="text-gray-400 mb-8 text-lg leading-relaxed">
                     {veioDoCadastro && (
-                        <>Login criado com sucesso. </>
+                        <>Login criado com sucesso, aguardando aprovação. </>
                     )}
                     {veioDoLogin && (
                         <>Seu login foi identificado, mas ainda não está aprovado. </>
