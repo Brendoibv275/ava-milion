@@ -77,16 +77,30 @@ export default function LoginPage() {
                 if (signUpError) throw signUpError;
 
                 // Redireciona para aviso de conta criada e pendente
-                router.push("/admin/pendente");
+                router.push("/admin/pendente?origem=cadastro");
 
             } else {
                 // Login normal
-                const { error: authError } = await supabase.auth.signInWithPassword({
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                     email,
                     password,
                 });
 
                 if (authError) throw authError;
+
+                if (authData.user?.id) {
+                    const { data: adminUser } = await supabase
+                        .from("admin_users")
+                        .select("is_approved")
+                        .eq("id", authData.user.id)
+                        .single();
+
+                    if (adminUser?.is_approved !== true) {
+                        router.push("/admin/pendente?origem=login");
+                        router.refresh();
+                        return;
+                    }
+                }
 
                 router.push("/admin/dashboard");
                 router.refresh();

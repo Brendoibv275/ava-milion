@@ -2,11 +2,15 @@
 
 import { createClient } from "@/utils/supabase/client";
 import { LogOut, Clock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function PendentePage() {
     const supabase = createClient();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const origem = searchParams.get("origem");
+    const veioDoLogin = origem === "login";
+    const veioDoCadastro = origem === "cadastro";
 
     const handleSair = async () => {
         await supabase.auth.signOut();
@@ -25,7 +29,13 @@ export default function PendentePage() {
 
                 <h1 className="text-3xl font-bold mb-4 text-white">Conta em análise</h1>
                 <p className="text-gray-400 mb-8 text-lg leading-relaxed">
-                    Sua conta foi criada com sucesso, mas o acesso ao painel de administração só será liberado após a aprovação de um <b>Administrador Geral</b>.
+                    {veioDoCadastro && (
+                        <>Login criado com sucesso. </>
+                    )}
+                    {veioDoLogin && (
+                        <>Seu login foi identificado, mas ainda não está aprovado. </>
+                    )}
+                    O acesso ao painel de administração só será liberado após a aprovação de um <b>Administrador Geral</b>.
                 </p>
 
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-8 text-sm text-gray-300">
