@@ -213,9 +213,9 @@ export default function AvaliacoesPage() {
                                 onChange={(e) => setAtendenteId(e.target.value)}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
                             >
-                                <option value="">Todos</option>
+                                <option value="" className="bg-white text-black">Todos</option>
                                 {atendentes.map((atendente) => (
-                                    <option key={atendente.id} value={atendente.id}>
+                                    <option key={atendente.id} value={atendente.id} className="bg-white text-black">
                                         {atendente.nome}
                                     </option>
                                 ))}
