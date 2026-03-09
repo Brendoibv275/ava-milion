@@ -32,7 +32,7 @@ CREATE TABLE public.avaliacoes_atendimento (
     "problemaResolvido" text NOT NULL CHECK ("problemaResolvido" IN ('SIM', 'NAO', 'PARCIALMENTE')),
     "atendenteId" uuid NOT NULL REFERENCES public.atendentes(id) ON DELETE RESTRICT,
     nota integer NOT NULL CHECK (
-        (tipo = 'AULA' AND nota >= 1 AND nota <= 5)
+        (tipo = 'AULA' AND nota >= 0 AND nota <= 10)
         OR
         (tipo IN ('SISTEMA', 'MENTORIA') AND nota >= 0 AND nota <= 10)
     ),

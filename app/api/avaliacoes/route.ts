@@ -36,8 +36,8 @@ export async function POST(req: Request) {
         if (Number.isNaN(notaNormalizada)) {
             return NextResponse.json({ error: "Nota inválida" }, { status: 400 });
         }
-        if (tipo === "AULA" && (notaNormalizada < 1 || notaNormalizada > 5)) {
-            return NextResponse.json({ error: "A avaliação da aula deve ser entre 1 e 5" }, { status: 400 });
+        if (tipo === "AULA" && (notaNormalizada < 0 || notaNormalizada > 10)) {
+            return NextResponse.json({ error: "A avaliação da aula deve ser entre 0 e 10" }, { status: 400 });
         }
         if ((tipo === "SISTEMA" || tipo === "MENTORIA") && (notaNormalizada < 0 || notaNormalizada > 10)) {
             return NextResponse.json({ error: "A nota do atendimento deve ser entre 0 e 10" }, { status: 400 });

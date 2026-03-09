@@ -21,7 +21,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
     const [atendentes, setAtendentes] = useState<Atendente[]>([]);
     const [loading, setLoading] = useState(false);
     const [submitError, setSubmitError] = useState("");
-    const [nota, setNota] = useState(tipo === "AULA" ? 0 : 8);
+    const [nota, setNota] = useState<number | null>(tipo === "AULA" ? null : 8);
     const [hoverNota, setHoverNota] = useState<number | null>(null);
     const [hoverCircleNota, setHoverCircleNota] = useState<number | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,15 +51,9 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
     }, [tipo]);
 
     useEffect(() => {
-        setNota(tipo === "AULA" ? 0 : 8);
+        setNota(tipo === "AULA" ? null : 8);
         setHoverNota(null);
     }, [tipo]);
-
-    const getProblemaResolvidoFromAulaNota = (valorNota: number) => {
-        if (valorNota >= 4) return "SIM";
-        if (valorNota === 3) return "PARCIALMENTE";
-        return "NAO";
-    };
 
     const setField = (field: keyof typeof form, value: string | string[]) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -81,7 +75,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
         if (!form.problemaResolvido) nextErrors.problemaResolvido = "Selecione uma opção.";
         if (!form.atendenteId) nextErrors.atendenteId = isAula ? "Selecione o professor." : "Selecione o atendente.";
         if (!form.recomenda) nextErrors.recomenda = "Selecione se recomenda ou não.";
-        if (isAula && nota === 0) nextErrors.nota = "Escolha uma nota para a aula.";
+        if (isAula && nota === null) nextErrors.nota = "Escolha uma nota para a aula.";
         if (isSuporte && form.circleNota === "") nextErrors.circleNota = "Informe uma nota para a comunidade (Circle).";
         return nextErrors;
     };
@@ -143,11 +137,11 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
         }
     };
 
-    const notaDisplay = hoverNota ?? nota;
+    const notaDisplay = hoverNota ?? (nota ?? -1);
     const notaColor = isAula
-        ? notaDisplay >= 5
+        ? notaDisplay >= 8
             ? "#22c55e"
-            : notaDisplay >= 3
+            : notaDisplay >= 5
                 ? "#f59e0b"
                 : "#ef4444"
         : notaDisplay >= 8
@@ -261,72 +255,31 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                 {/* Problema Resolvido */}
                 <div className="glass rounded-2xl p-6 space-y-3">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">
-                        {isAula ? "Como você avalia o resultado da aula? *" : "Seu problema foi resolvido? *"}
+                        {isAula ? "Seu problema foi resolvido com a aula? *" : "Seu problema foi resolvido? *"}
                     </h2>
-                    {isAula ? (
-                        <>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-400">Selecione um nível de avaliação</span>
-                                <span className="text-2xl font-black transition-colors" style={{ color: notaColor }}>
-                                    {notaDisplay === 0 ? "-" : notaDisplay}
-                                </span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                                {[
-                                    { value: 1, label: "Ruim", cls: "red" },
-                                    { value: 2, label: "Regular", cls: "red" },
-                                    { value: 3, label: "Intermediário", cls: "yellow" },
-                                    { value: 4, label: "Bom", cls: "green" },
-                                    { value: 5, label: "Excelente", cls: "green" },
-                                ].map((opt) => (
-                                    <button
-                                        key={opt.value}
-                                        type="button"
-                                        onMouseEnter={() => setHoverNota(opt.value)}
-                                        onMouseLeave={() => setHoverNota(null)}
-                                        onClick={() => {
-                                            setNota(opt.value);
-                                            setField("problemaResolvido", getProblemaResolvidoFromAulaNota(opt.value));
-                                        }}
-                                        className={`px-3 py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${nota === opt.value
-                                            ? opt.cls === "green"
-                                                ? "border-green-500 bg-green-500/15 text-green-400"
-                                                : opt.cls === "yellow"
-                                                    ? "border-yellow-500 bg-yellow-500/15 text-yellow-400"
-                                                    : "border-red-500 bg-red-500/15 text-red-400"
-                                            : "border-white/10 bg-white/3 text-gray-300 hover:border-white/20"
-                                            }`}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-3">
-                            {[
-                                { value: "SIM", label: "✅ Sim", cls: "green" },
-                                { value: "PARCIALMENTE", label: "⚠️ Parcialmente", cls: "yellow" },
-                                { value: "NAO", label: "❌ Não", cls: "red" },
-                            ].map((opt) => (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => setField("problemaResolvido", opt.value)}
-                                    className={`py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${form.problemaResolvido === opt.value
-                                        ? opt.cls === "green"
-                                            ? "border-green-500 bg-green-500/15 text-green-400"
-                                            : opt.cls === "yellow"
-                                                ? "border-yellow-500 bg-yellow-500/15 text-yellow-400"
-                                                : "border-red-500 bg-red-500/15 text-red-400"
-                                        : "border-white/10 bg-white/3 text-gray-300 hover:border-white/20"
-                                        }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { value: "SIM", label: "✅ Sim", cls: "green" },
+                            { value: "PARCIALMENTE", label: "⚠️ Parcialmente", cls: "yellow" },
+                            { value: "NAO", label: "❌ Não", cls: "red" },
+                        ].map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setField("problemaResolvido", opt.value)}
+                                className={`py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${form.problemaResolvido === opt.value
+                                    ? opt.cls === "green"
+                                        ? "border-green-500 bg-green-500/15 text-green-400"
+                                        : opt.cls === "yellow"
+                                            ? "border-yellow-500 bg-yellow-500/15 text-yellow-400"
+                                            : "border-red-500 bg-red-500/15 text-red-400"
+                                    : "border-white/10 bg-white/3 text-gray-300 hover:border-white/20"
+                                    }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
                     {(errors.problemaResolvido || errors.nota) && <p className="text-red-300 text-sm">{errors.problemaResolvido || errors.nota}</p>}
                 </div>
 
@@ -382,42 +335,42 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                 </div>
 
                 {/* Nota */}
-                {!isAula && (
-                    <div className="glass rounded-2xl p-6 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Nota do atendimento *</h2>
-                            <span className="text-4xl font-black transition-colors" style={{ color: notaColor }}>
-                                {notaDisplay}
-                            </span>
-                        </div>
-                        <div className="flex gap-1.5 flex-wrap">
-                            {Array.from({ length: 11 }, (_, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onMouseEnter={() => setHoverNota(i)}
-                                    onMouseLeave={() => setHoverNota(null)}
-                                    onClick={() => setNota(i)}
-                                    className={`touch-target flex-1 min-w-[44px] rounded-lg border text-sm font-bold transition-all ${i <= (hoverNota ?? nota)
-                                        ? i >= 8
-                                            ? "bg-green-500/20 border-green-500 text-green-400"
-                                            : i >= 5
-                                                ? "bg-yellow-500/20 border-yellow-500 text-yellow-400"
-                                                : "bg-red-500/20 border-red-500 text-red-400"
-                                        : "bg-white/3 border-white/10 text-gray-400 hover:border-white/20"
-                                        }`}
-                                >
-                                    {i}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-600">
-                            <span>Péssimo</span>
-                            <span>Excelente</span>
-                        </div>
-                        {errors.nota && <p className="text-red-300 text-sm">{errors.nota}</p>}
+                <div className="glass rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">
+                            {isAula ? "Nota da aula *" : "Nota do atendimento *"}
+                        </h2>
+                        <span className="text-4xl font-black transition-colors" style={{ color: notaColor }}>
+                            {notaDisplay < 0 ? "-" : notaDisplay}
+                        </span>
                     </div>
-                )}
+                    <div className="flex gap-1.5 flex-wrap">
+                        {Array.from({ length: 11 }, (_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onMouseEnter={() => setHoverNota(i)}
+                                onMouseLeave={() => setHoverNota(null)}
+                                onClick={() => setNota(i)}
+                                className={`touch-target flex-1 min-w-[44px] rounded-lg border text-sm font-bold transition-all ${i <= (hoverNota ?? (nota ?? -1))
+                                    ? i >= 8
+                                        ? "bg-green-500/20 border-green-500 text-green-400"
+                                        : i >= 5
+                                            ? "bg-yellow-500/20 border-yellow-500 text-yellow-400"
+                                            : "bg-red-500/20 border-red-500 text-red-400"
+                                    : "bg-white/3 border-white/10 text-gray-400 hover:border-white/20"
+                                    }`}
+                            >
+                                {i}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-600">
+                        <span>Péssimo</span>
+                        <span>Excelente</span>
+                    </div>
+                    {errors.nota && <p className="text-red-300 text-sm">{errors.nota}</p>}
+                </div>
 
                 {isSuporte && (
                     <div className="glass rounded-2xl p-6 space-y-4">
