@@ -1,16 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { LogOut, Clock } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function PendentePage() {
     const supabase = createClient();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const origem = searchParams.get("origem");
+    const [origem, setOrigem] = useState<string | null>(null);
     const veioDoLogin = origem === "login";
     const veioDoCadastro = origem === "cadastro";
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        setOrigem(params.get("origem"));
+    }, []);
 
     const handleSair = async () => {
         await supabase.auth.signOut();
