@@ -20,9 +20,11 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
     const router = useRouter();
     const [atendentes, setAtendentes] = useState<Atendente[]>([]);
     const [loading, setLoading] = useState(false);
+    const [submitError, setSubmitError] = useState("");
     const [nota, setNota] = useState(tipo === "AULA" ? 0 : 8);
     const [hoverNota, setHoverNota] = useState<number | null>(null);
     const [hoverCircleNota, setHoverCircleNota] = useState<number | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [form, setForm] = useState({
         nomeCliente: "",
@@ -59,10 +61,35 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
         return "NAO";
     };
 
+    const setField = (field: keyof typeof form, value: string | string[]) => {
+        setForm((prev) => ({ ...prev, [field]: value }));
+        setErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+        if (submitError) setSubmitError("");
+    };
+
+    const validateForm = () => {
+        const nextErrors: Record<string, string> = {};
+        if (!form.nomeCliente.trim()) nextErrors.nomeCliente = "Informe seu nome completo.";
+        if (!form.emailCliente.trim()) nextErrors.emailCliente = "Informe seu e-mail.";
+        if (!form.motivoContato.trim()) nextErrors.motivoContato = "Selecione ou descreva o motivo do contato.";
+        if (form.motivoContato === "outros" && !form.motivoOutros.trim()) nextErrors.motivoOutros = "Descreva o motivo em \"Outros\".";
+        if (!form.problemaResolvido) nextErrors.problemaResolvido = "Selecione uma opção.";
+        if (!form.atendenteId) nextErrors.atendenteId = isAula ? "Selecione o professor." : "Selecione o atendente.";
+        if (!form.recomenda) nextErrors.recomenda = "Selecione se recomenda ou não.";
+        if (isAula && nota === 0) nextErrors.nota = "Escolha uma nota para a aula.";
+        if (isSuporte && form.circleNota === "") nextErrors.circleNota = "Informe uma nota para a comunidade (Circle).";
+        return nextErrors;
+    };
+
     const handleSugestao = (val: string) => {
         const isUnselecting = form.sugestoes.includes(val);
         if (!isUnselecting && form.sugestoes.length >= 3) {
-            alert("Você pode selecionar no máximo 3 sugestões.");
+            setErrors((prev) => ({ ...prev, sugestoes: "Você pode selecionar no máximo 3 sugestões." }));
             return;
         }
 
@@ -72,20 +99,25 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                 ? f.sugestoes.filter((s) => s !== val)
                 : [...f.sugestoes, val],
         }));
+        setErrors((prev) => {
+            if (!prev.sugestoes) return prev;
+            const next = { ...prev };
+            delete next.sugestoes;
+            return next;
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.nomeCliente || !form.emailCliente || !form.motivoContato || !form.problemaResolvido || !form.atendenteId || !form.recomenda) {
-            alert("Por favor, preencha todos os campos obrigatórios.");
-            return;
-        }
-        if (isSuporte && form.circleNota === "") {
-            alert("Por favor, informe uma nota para a comunidade (Circle).");
+        const nextErrors = validateForm();
+        if (Object.keys(nextErrors).length > 0) {
+            setErrors(nextErrors);
+            setSubmitError("Revise os campos obrigatórios destacados.");
             return;
         }
 
         setLoading(true);
+        setSubmitError("");
         try {
             const res = await fetch("/api/avaliacoes", {
                 method: "POST",
@@ -102,10 +134,10 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
             if (res.ok) {
                 router.push("/avaliacao/obrigado");
             } else {
-                alert("Erro ao enviar avaliação. Tente novamente.");
+                setSubmitError("Erro ao enviar avaliação. Tente novamente.");
             }
         } catch {
-            alert("Erro de conexão. Tente novamente.");
+            setSubmitError("Erro de conexão. Tente novamente.");
         } finally {
             setLoading(false);
         }
@@ -125,7 +157,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                 : "#ef4444";
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={{ background: "oklch(0.08 0 0)" }}>
+        <div className="min-h-screen flex flex-col items-center px-4 py-8 md:py-12" style={{ background: "oklch(0.08 0 0)" }}>
             {/* Header */}
             <div className="w-full max-w-2xl mb-8 animate-fade-in">
                 <div className={`h-1.5 w-24 rounded-full mb-6 ${cor}`} />
@@ -134,6 +166,12 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
             </div>
 
             <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-5 animate-fade-in">
+                {(submitError || Object.keys(errors).length > 0) && (
+                    <div className="glass rounded-2xl p-4 border border-red-500/30">
+                        <p className="text-sm text-red-300 font-medium">{submitError || "Revise os campos obrigatórios."}</p>
+                    </div>
+                )}
+
                 {/* Nome e Email */}
                 <div className="glass rounded-2xl p-6 space-y-4">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Seus dados</h2>
@@ -143,10 +181,14 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             type="text"
                             required
                             placeholder="Seu nome"
+                            autoComplete="name"
+                            autoCapitalize="words"
+                            enterKeyHint="next"
                             value={form.nomeCliente}
-                            onChange={(e) => setForm({ ...form, nomeCliente: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:bg-white/8 transition-all"
+                            onChange={(e) => setField("nomeCliente", e.target.value)}
+                            className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:bg-white/8 transition-all ${errors.nomeCliente ? "border-red-500/40" : "border-white/10"}`}
                         />
+                        {errors.nomeCliente && <p className="text-red-300 text-sm mt-1.5">{errors.nomeCliente}</p>}
                     </div>
                     <div>
                         <label className="block text-sm text-gray-300 mb-1.5">E-mail *</label>
@@ -154,10 +196,14 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             type="email"
                             required
                             placeholder="seu@email.com"
+                            autoComplete="email"
+                            inputMode="email"
+                            enterKeyHint="next"
                             value={form.emailCliente}
-                            onChange={(e) => setForm({ ...form, emailCliente: e.target.value })}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:bg-white/8 transition-all"
+                            onChange={(e) => setField("emailCliente", e.target.value)}
+                            className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 focus:bg-white/8 transition-all ${errors.emailCliente ? "border-red-500/40" : "border-white/10"}`}
                         />
+                        {errors.emailCliente && <p className="text-red-300 text-sm mt-1.5">{errors.emailCliente}</p>}
                     </div>
                 </div>
 
@@ -171,9 +217,10 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             required
                             placeholder="Descreva o motivo de ter assistido a aula..."
                             value={form.motivoContato}
-                            onChange={(e) => setForm({ ...form, motivoContato: e.target.value })}
+                            onChange={(e) => setField("motivoContato", e.target.value)}
+                            enterKeyHint="next"
                             rows={3}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none"
+                            className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none ${errors.motivoContato ? "border-red-500/40" : "border-white/10"}`}
                         />
                     ) : (
                         <>
@@ -182,8 +229,11 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                     <button
                                         key={m.value}
                                         type="button"
-                                        onClick={() => setForm({ ...form, motivoContato: m.value, motivoOutros: "" })}
-                                        className={`text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${form.motivoContato === m.value
+                                        onClick={() => {
+                                            setField("motivoContato", m.value);
+                                            setField("motivoOutros", "");
+                                        }}
+                                        className={`text-left px-4 py-3 min-h-11 rounded-xl border transition-all text-sm font-medium ${form.motivoContato === m.value
                                             ? "border-blue-500 bg-blue-500/15 text-white"
                                             : "border-white/10 bg-white/3 text-gray-300 hover:border-white/20 hover:bg-white/5"
                                             }`}
@@ -196,12 +246,15 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                 <textarea
                                     placeholder="Descreva o motivo do seu contato..."
                                     value={form.motivoOutros}
-                                    onChange={(e) => setForm({ ...form, motivoOutros: e.target.value })}
+                                    onChange={(e) => setField("motivoOutros", e.target.value)}
                                     rows={3}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none"
+                                    className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none ${errors.motivoOutros ? "border-red-500/40" : "border-white/10"}`}
                                 />
                             )}
                         </>
+                    )}
+                    {(errors.motivoContato || errors.motivoOutros) && (
+                        <p className="text-red-300 text-sm">{errors.motivoContato || errors.motivoOutros}</p>
                     )}
                 </div>
 
@@ -213,7 +266,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                     {isAula ? (
                         <>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Selecione um nível de avaliação</span>
+                                <span className="text-sm text-gray-400">Selecione um nível de avaliação</span>
                                 <span className="text-2xl font-black transition-colors" style={{ color: notaColor }}>
                                     {notaDisplay === 0 ? "-" : notaDisplay}
                                 </span>
@@ -233,12 +286,9 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                         onMouseLeave={() => setHoverNota(null)}
                                         onClick={() => {
                                             setNota(opt.value);
-                                            setForm({
-                                                ...form,
-                                                problemaResolvido: getProblemaResolvidoFromAulaNota(opt.value),
-                                            });
+                                            setField("problemaResolvido", getProblemaResolvidoFromAulaNota(opt.value));
                                         }}
-                                        className={`px-3 py-3 rounded-xl border transition-all text-sm font-semibold ${nota === opt.value
+                                        className={`px-3 py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${nota === opt.value
                                             ? opt.cls === "green"
                                                 ? "border-green-500 bg-green-500/15 text-green-400"
                                                 : opt.cls === "yellow"
@@ -262,8 +312,8 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                 <button
                                     key={opt.value}
                                     type="button"
-                                    onClick={() => setForm({ ...form, problemaResolvido: opt.value })}
-                                    className={`py-3 rounded-xl border transition-all text-sm font-semibold ${form.problemaResolvido === opt.value
+                                    onClick={() => setField("problemaResolvido", opt.value)}
+                                    className={`py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${form.problemaResolvido === opt.value
                                         ? opt.cls === "green"
                                             ? "border-green-500 bg-green-500/15 text-green-400"
                                             : opt.cls === "yellow"
@@ -277,6 +327,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             ))}
                         </div>
                     )}
+                    {(errors.problemaResolvido || errors.nota) && <p className="text-red-300 text-sm">{errors.problemaResolvido || errors.nota}</p>}
                 </div>
 
                 {/* Recomenda */}
@@ -290,8 +341,8 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             <button
                                 key={opt.value}
                                 type="button"
-                                onClick={() => setForm({ ...form, recomenda: opt.value })}
-                                className={`py-3 rounded-xl border transition-all text-sm font-semibold ${form.recomenda === opt.value
+                                onClick={() => setField("recomenda", opt.value)}
+                                className={`py-3 min-h-11 rounded-xl border transition-all text-sm font-semibold ${form.recomenda === opt.value
                                     ? opt.cls === "green"
                                         ? "border-green-500 bg-green-500/15 text-green-400"
                                         : "border-red-500 bg-red-500/15 text-red-400"
@@ -302,6 +353,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             </button>
                         ))}
                     </div>
+                    {errors.recomenda && <p className="text-red-300 text-sm">{errors.recomenda}</p>}
                 </div>
 
                 {/* Atendente */}
@@ -315,8 +367,8 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                 <button
                                     key={a.id}
                                     type="button"
-                                    onClick={() => setForm({ ...form, atendenteId: a.id })}
-                                    className={`px-3 py-2.5 rounded-xl border transition-all text-sm font-medium text-center ${form.atendenteId === a.id
+                                    onClick={() => setField("atendenteId", a.id)}
+                                    className={`px-3 py-2.5 min-h-11 rounded-xl border transition-all text-sm font-medium text-center ${form.atendenteId === a.id
                                         ? "border-blue-500 bg-blue-500/15 text-white"
                                         : "border-white/10 bg-white/3 text-gray-300 hover:border-white/20"
                                         }`}
@@ -326,6 +378,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             ))}
                         </div>
                     )}
+                    {errors.atendenteId && <p className="text-red-300 text-sm">{errors.atendenteId}</p>}
                 </div>
 
                 {/* Nota */}
@@ -345,7 +398,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                     onMouseEnter={() => setHoverNota(i)}
                                     onMouseLeave={() => setHoverNota(null)}
                                     onClick={() => setNota(i)}
-                                    className={`flex-1 min-w-[2rem] h-10 rounded-lg border text-sm font-bold transition-all ${i <= (hoverNota ?? nota)
+                                    className={`touch-target flex-1 min-w-[44px] rounded-lg border text-sm font-bold transition-all ${i <= (hoverNota ?? nota)
                                         ? i >= 8
                                             ? "bg-green-500/20 border-green-500 text-green-400"
                                             : i >= 5
@@ -362,6 +415,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             <span>Péssimo</span>
                             <span>Excelente</span>
                         </div>
+                        {errors.nota && <p className="text-red-300 text-sm">{errors.nota}</p>}
                     </div>
                 )}
 
@@ -380,8 +434,8 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                         type="button"
                                         onMouseEnter={() => setHoverCircleNota(i)}
                                         onMouseLeave={() => setHoverCircleNota(null)}
-                                        onClick={() => setForm({ ...form, circleNota: String(i) })}
-                                        className={`flex-1 min-w-[2rem] h-10 rounded-lg border text-sm font-bold transition-all ${i <= (hoverCircleNota ?? (form.circleNota === "" ? -1 : Number(form.circleNota)))
+                                        onClick={() => setField("circleNota", String(i))}
+                                        className={`touch-target flex-1 min-w-[44px] rounded-lg border text-sm font-bold transition-all ${i <= (hoverCircleNota ?? (form.circleNota === "" ? -1 : Number(form.circleNota)))
                                             ? i >= 8
                                                 ? "bg-green-500/20 border-green-500 text-green-400"
                                                 : i >= 5
@@ -404,11 +458,12 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             <textarea
                                 placeholder="Descreva sugestões para melhorar a comunidade Circle..."
                                 value={form.circleSugestoes}
-                                onChange={(e) => setForm({ ...form, circleSugestoes: e.target.value })}
+                                onChange={(e) => setField("circleSugestoes", e.target.value)}
                                 rows={3}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none"
                             />
                         </div>
+                        {errors.circleNota && <p className="text-red-300 text-sm">{errors.circleNota}</p>}
                     </div>
                 )}
 
@@ -420,7 +475,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                             <textarea
                                 placeholder="Como foi sua experiência com a aula? Compartilhe sua opinião..."
                                 value={form.opiniaoPessoal}
-                                onChange={(e) => setForm({ ...form, opiniaoPessoal: e.target.value })}
+                                onChange={(e) => setField("opiniaoPessoal", e.target.value)}
                                 rows={4}
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none"
                             />
@@ -428,7 +483,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
 
                         <div className="glass rounded-2xl p-6 space-y-3">
                             <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Sugestões e melhorias</h2>
-                            <p className="text-xs text-gray-500">Selecione até 3 opções.</p>
+                            <p className="text-sm text-gray-400">Selecione até 3 opções.</p>
                             <div className="space-y-2">
                                 {SUGESTOES_AULA.map((s) => {
                                     const isOtimo = s.value === "otimo";
@@ -448,7 +503,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                             key={s.value}
                                             type="button"
                                             onClick={() => handleSugestao(s.value)}
-                                            className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${btnClass}`}
+                                            className={`w-full text-left px-4 py-3 min-h-11 rounded-xl border transition-all text-sm font-medium ${btnClass}`}
                                         >
                                             <span className="mr-2">{isSelected ? "✓" : "○"}</span>
                                             {s.label}
@@ -460,23 +515,26 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                                 <textarea
                                     placeholder="Descreva sua sugestão..."
                                     value={form.sugestoesOutros}
-                                    onChange={(e) => setForm({ ...form, sugestoesOutros: e.target.value })}
+                                    onChange={(e) => setField("sugestoesOutros", e.target.value)}
                                     rows={3}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-blue-500 transition-all resize-none"
                                 />
                             )}
+                            {errors.sugestoes && <p className="text-red-300 text-sm">{errors.sugestoes}</p>}
                         </div>
                     </>
                 )}
 
                 {/* Submit */}
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full py-4 rounded-2xl font-bold text-white text-lg transition-all ${cor} hover:opacity-90 active:scale-98 disabled:opacity-50 glow-blue`}
-                >
-                    {loading ? "Enviando..." : "Enviar Avaliação"}
-                </button>
+                <div className="sticky bottom-2 pb-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full min-h-11 py-4 rounded-2xl font-bold text-white text-lg transition-all ${cor} hover:opacity-90 active:scale-98 disabled:opacity-50 glow-blue`}
+                    >
+                        {loading ? "Enviando..." : "Enviar Avaliação"}
+                    </button>
+                </div>
             </form>
         </div>
     );

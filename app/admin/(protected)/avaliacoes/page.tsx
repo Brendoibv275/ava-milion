@@ -131,14 +131,15 @@ export default function AvaliacoesPage() {
     return (
         <>
             <div className="space-y-6 animate-fade-in max-w-6xl">
-                <div className="flex justify-between items-end">
+                <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Histórico de Avaliações</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">Histórico de Avaliações</h1>
                         <p className="text-gray-400 mt-1">Lista completa de todos os feedbacks recebidos.</p>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 items-center">
-                        <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                    <div className="flex flex-col gap-3">
+                        <div className="overflow-x-auto scrollbar-thin pb-1">
+                            <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                             {[
                                 { v: "7", l: "7 Dias" },
                                 { v: "30", l: "Último Mês" },
@@ -149,30 +150,33 @@ export default function AvaliacoesPage() {
                                 <button
                                     key={p.v}
                                     onClick={() => setPeriodo(p.v)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${periodo === p.v ? "bg-purple-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
+                                    className={`px-4 py-2 min-h-11 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${periodo === p.v ? "bg-purple-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
                                         }`}
                                 >
                                     {p.l}
                                 </button>
                             ))}
                         </div>
+                        </div>
 
-                        <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                        <div className="overflow-x-auto scrollbar-thin pb-1">
+                            <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                             {["TODOS", "SISTEMA", "MENTORIA", "AULA"].map(f => (
                                 <button
                                     key={f}
                                     onClick={() => setFiltro(f)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filtro === f ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
+                                    className={`px-4 py-2 min-h-11 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${filtro === f ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
                                         }`}
                                 >
                                     {f === "TODOS" ? "Todos" : f}
                                 </button>
                             ))}
                         </div>
+                        </div>
                         <button
                             onClick={exportarCSV}
                             disabled={avaliacoes.length === 0}
-                            className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-medium transition-colors hidden sm:flex items-center gap-2 glow-blue print:hidden"
+                            className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-5 py-3 min-h-11 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 glow-blue print:hidden w-full sm:w-auto"
                         >
                             Exportar CSV
                         </button>
@@ -187,7 +191,7 @@ export default function AvaliacoesPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Data inicial</label>
+                            <label className="text-sm text-gray-400 mb-1 block">Data inicial</label>
                             <input
                                 type="date"
                                 value={dataInicio}
@@ -197,7 +201,7 @@ export default function AvaliacoesPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Data final</label>
+                            <label className="text-sm text-gray-400 mb-1 block">Data final</label>
                             <input
                                 type="date"
                                 value={dataFim}
@@ -207,7 +211,7 @@ export default function AvaliacoesPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs text-gray-400 mb-1 block">Atendente</label>
+                            <label className="text-sm text-gray-400 mb-1 block">Atendente</label>
                             <select
                                 value={atendenteId}
                                 onChange={(e) => setAtendenteId(e.target.value)}
@@ -240,7 +244,7 @@ export default function AvaliacoesPage() {
 
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full min-w-[980px] text-left">
                             <thead className="bg-white/5 border-b border-white/10 whitespace-nowrap">
                                 <tr>
                                     <th className="p-4 text-sm font-semibold text-gray-300">Data</th>
@@ -276,7 +280,7 @@ export default function AvaliacoesPage() {
                                             </td>
                                             <td className="p-4 text-sm font-medium text-gray-200">{A.atendentes?.nome}</td>
                                             <td className="p-4">
-                                                <span className="text-[10px] px-2 py-1 bg-white/10 rounded-md text-gray-300">{A.tipo}</span>
+                                                <span className="text-xs px-2 py-1 bg-white/10 rounded-md text-gray-300">{A.tipo}</span>
                                             </td>
                                             <td className="p-4">
                                                 {A.problemaResolvido === "SIM" && <span className="text-green-400 text-sm font-bold">Sim</span>}
@@ -322,7 +326,7 @@ export default function AvaliacoesPage() {
                         </div>
 
                         <div className="grid gap-6">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                     <span className="text-xs text-gray-500 uppercase font-bold block mb-1">Cliente</span>
                                     <p className="text-white font-medium">{detalhesSelecionados.nomeCliente}</p>

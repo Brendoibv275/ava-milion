@@ -71,9 +71,9 @@ export default function ConfiguracoesPage() {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in max-w-5xl">
+        <div className="space-y-6 md:space-y-8 animate-fade-in max-w-5xl">
             <div>
-                <h1 className="text-3xl font-bold text-white">Configurações</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">Configurações</h1>
                 <p className="text-gray-400 mt-1">Gerencie sua conta e controle de acesso ao painel.</p>
             </div>
 
@@ -122,7 +122,7 @@ export default function ConfiguracoesPage() {
                     <button
                         type="submit"
                         disabled={passLoading}
-                        className="py-3 px-6 rounded-xl gradient-blue text-white font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        className="py-3 px-6 min-h-11 rounded-xl gradient-blue text-white font-bold transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
                         {passLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                         Salvar Nova Senha
@@ -135,7 +135,8 @@ export default function ConfiguracoesPage() {
                 <h2 className="text-xl font-bold text-white mb-4">Administradores do Painel</h2>
 
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
-                    <table className="w-full text-left">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[860px] text-left">
                         <thead className="bg-white/5 border-b border-white/10">
                             <tr>
                                 <th className="p-4 text-sm font-semibold text-gray-300">Data Cadastro</th>
@@ -166,7 +167,7 @@ export default function ConfiguracoesPage() {
                                         <td className="p-4 text-right">
                                             <button
                                                 onClick={() => toggleAprovacao(u.id, u.is_approved)}
-                                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${u.is_approved
+                                                className={`inline-flex items-center gap-2 px-3 py-2 min-h-11 rounded-lg text-sm font-medium transition-colors ${u.is_approved
                                                     ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
                                                     : "bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20"
                                                     }`}
@@ -179,6 +180,7 @@ export default function ConfiguracoesPage() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Check, X } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 
 export default function AtendentesPage() {
     const [atendentes, setAtendentes] = useState<any[]>([]);
@@ -51,22 +51,25 @@ export default function AtendentesPage() {
 
     return (
         <>
-            <div className="space-y-8 animate-fade-in relative max-w-4xl">
-                <div className="flex justify-between items-center">
+            <div className="space-y-6 md:space-y-8 animate-fade-in relative max-w-4xl">
+                <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-white">Equipe de Atendimento</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">Equipe de Atendimento</h1>
                         <p className="text-gray-400 mt-1">Gerencie atendentes e professores por canal de suporte/aula.</p>
                     </div>
                     <button
                         onClick={() => setNovoModal(true)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center gap-2 glow-blue"
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 min-h-11 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 glow-blue w-full md:w-auto"
                     >
-                        <Plus className="w-5 h-5" /> Adicionar Atendente/Professor
+                        <Plus className="w-5 h-5" />
+                        <span className="sm:hidden">Adicionar Atendente</span>
+                        <span className="hidden sm:inline">Adicionar Atendente/Professor</span>
                     </button>
                 </div>
 
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
-                    <table className="w-full text-left">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left">
                         <thead className="bg-white/5 border-b border-white/10">
                             <tr>
                                 <th className="p-4 text-sm font-semibold text-gray-300">Nome</th>
@@ -96,7 +99,7 @@ export default function AtendentesPage() {
                                     <td className="p-4 text-right">
                                         <button
                                             onClick={() => toggleAtivo(a.id, a.ativo)}
-                                            className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${a.ativo ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-green-500/30 text-green-400 hover:bg-green-500/10"
+                                            className={`text-sm px-3 py-2 min-h-11 rounded-lg border transition-colors ${a.ativo ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-green-500/30 text-green-400 hover:bg-green-500/10"
                                                 }`}
                                         >
                                             {a.ativo ? "Desativar" : "Reativar"}
@@ -111,6 +114,7 @@ export default function AtendentesPage() {
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
             </div>

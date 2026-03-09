@@ -23,14 +23,15 @@ export default function DashboardPage() {
     if (loading) return <div className="animate-pulse flex items-center justify-center p-12 text-gray-400">Carregando dashboard...</div>;
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="flex justify-between items-end flex-wrap gap-4">
+        <div className="space-y-6 md:space-y-8 animate-fade-in">
+            <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard Escalação</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Dashboard Escalação</h1>
                     <p className="text-gray-400 mt-1">Visão geral das métricas de atendimento.</p>
                 </div>
-                <div className="flex flex-wrap gap-4 items-center">
-                    <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                <div className="flex flex-col gap-3">
+                    <div className="overflow-x-auto scrollbar-thin pb-1">
+                        <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                         {[
                             { v: "7", l: "7 Dias" },
                             { v: "30", l: "Último Mês" },
@@ -41,25 +42,28 @@ export default function DashboardPage() {
                             <button
                                 key={p.v}
                                 onClick={() => setPeriodo(p.v)}
-                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${periodo === p.v ? "bg-purple-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
+                                className={`px-4 py-2 min-h-11 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${periodo === p.v ? "bg-purple-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
                                     }`}
                             >
                                 {p.l}
                             </button>
                         ))}
                     </div>
+                    </div>
 
-                    <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl">
+                    <div className="overflow-x-auto scrollbar-thin pb-1">
+                        <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                         {["TODOS", "SISTEMA", "MENTORIA", "AULA"].map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFiltro(f)}
-                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${filtro === f ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
+                                className={`px-4 py-2 min-h-11 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${filtro === f ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white"
                                     }`}
                             >
                                 {f === "TODOS" ? "Todos" : f}
                             </button>
                         ))}
+                    </div>
                     </div>
                 </div>
             </div>
@@ -100,10 +104,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Ranking */}
-            <div className="glass p-6 rounded-2xl border border-white/10">
+            <div className="glass p-4 md:p-6 rounded-2xl border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-6">Ranking de Atendentes</h2>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full min-w-[680px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-white/10 text-gray-400 text-sm">
                                 <th className="pb-3 font-medium">Posição</th>
@@ -121,7 +125,7 @@ export default function DashboardPage() {
                                     <td className="py-4">
                                         <div className="flex gap-2">
                                             {atendente.categorias.map((c: string) => (
-                                                <span key={c} className="text-[10px] px-2 py-1 bg-white/10 rounded-md text-gray-300">
+                                                <span key={c} className="text-xs px-2 py-1 bg-white/10 rounded-md text-gray-300">
                                                     {c}
                                                 </span>
                                             ))}
