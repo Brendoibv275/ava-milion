@@ -5,6 +5,40 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Loader2 } from "lucide-react";
 
+function getRegisterErrorMessage(err: unknown): string {
+    const defaultMsg = "Erro ao criar conta. Tente novamente.";
+    if (!err || typeof err !== "object") return defaultMsg;
+
+    const errorObj = err as { message?: string; status?: number; code?: string };
+    const rawMessage = (errorObj.message || "").toLowerCase();
+
+    if (rawMessage.includes("user already registered") || rawMessage.includes("already registered")) {
+        return "Este e-mail já está cadastrado. Tente entrar ou use outro e-mail.";
+    }
+    if (rawMessage.includes("password") && rawMessage.includes("at least")) {
+        return "Senha fraca. Use uma senha mais forte com no mínimo 6 caracteres.";
+    }
+    if (rawMessage.includes("signups not allowed")) {
+        return "Cadastro desabilitado no Supabase. Ative o Email Signup em Authentication > Sign In / Providers.";
+    }
+    if (rawMessage.includes("captcha")) {
+        return "Falha de verificação de segurança (captcha). Verifique a configuração do Auth no Supabase.";
+    }
+    if (rawMessage.includes("database") || rawMessage.includes("trigger")) {
+        return "Erro ao salvar o usuário no banco. Verifique o script de admin_approval no Supabase.";
+    }
+    if (errorObj.status === 422) {
+        return "Dados inválidos para cadastro. Revise nome, e-mail e senha.";
+    }
+    if (errorObj.status === 429) {
+        return "Muitas tentativas em sequência. Aguarde e tente novamente.";
+    }
+    if (rawMessage) {
+        return `Não foi possível criar a conta: ${errorObj.message}`;
+    }
+    return defaultMsg;
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const supabase = createClient();
@@ -22,6 +56,13 @@ export default function LoginPage() {
 
         try {
             if (isRegistering) {
+                if (nome.trim().length < 3) {
+                    throw new Error("Nome inválido");
+                }
+                if (password.length < 6) {
+                    throw new Error("Senha inválida");
+                }
+
                 // Registro (Cria a conta)
                 const { error: signUpError } = await supabase.auth.signUp({
                     email,
@@ -50,8 +91,20 @@ export default function LoginPage() {
                 router.push("/admin/dashboard");
                 router.refresh();
             }
-        } catch (err: any) {
-            setError(isRegistering ? "Erro ao criar conta. Tente outra senha ou e-mail." : "Email ou senha inválidos. Tente novamente.");
+        } catch (err: unknown) {
+            if (isRegistering) {
+                const maybeError = err as { message?: string };
+                if (maybeError?.message === "Nome inválido") {
+                    setError("Informe seu nome completo (mínimo 3 caracteres).");
+                } else if (maybeError?.message === "Senha inválida") {
+                    setError("A senha deve ter pelo menos 6 caracteres.");
+                } else {
+                    console.error("Erro detalhado no cadastro admin:", err);
+                    setError(getRegisterErrorMessage(err));
+                }
+            } else {
+                setError("Email ou senha inválidos. Tente novamente.");
+            }
         } finally {
             setLoading(false);
         }
