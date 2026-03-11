@@ -23,14 +23,14 @@ export default function DashboardPage() {
     if (loading) return <div className="animate-pulse flex items-center justify-center p-12 text-gray-400">Carregando dashboard...</div>;
 
     return (
-        <div className="space-y-6 md:space-y-8 animate-fade-in">
+        <div className="space-y-6 md:space-y-8 animate-fade-in w-full min-w-0">
             <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
                 <div>
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Dashboard Escalação</h1>
                     <p className="text-gray-400 mt-1">Visão geral das métricas de atendimento.</p>
                 </div>
-                <div className="flex flex-col gap-3">
-                    <div className="overflow-x-auto scrollbar-thin pb-1">
+                <div className="flex flex-col gap-3 min-w-0">
+                    <div className="overflow-x-auto max-w-full scrollbar-thin pb-1">
                         <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                         {[
                             { v: "7", l: "7 Dias" },
@@ -51,7 +51,7 @@ export default function DashboardPage() {
                     </div>
                     </div>
 
-                    <div className="overflow-x-auto scrollbar-thin pb-1">
+                    <div className="overflow-x-auto max-w-full scrollbar-thin pb-1">
                         <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                         {["TODOS", "SISTEMA", "MENTORIA", "AULA"].map(f => (
                             <button
@@ -106,7 +106,7 @@ export default function DashboardPage() {
             {/* Ranking */}
             <div className="glass p-4 md:p-6 rounded-2xl border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-6">Ranking de Atendentes</h2>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-w-full">
                     <table className="w-full min-w-[680px] text-left border-collapse">
                         <thead>
                             <tr className="border-b border-white/10 text-gray-400 text-sm">

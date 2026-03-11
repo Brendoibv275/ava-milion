@@ -130,15 +130,15 @@ export default function AvaliacoesPage() {
 
     return (
         <>
-            <div className="space-y-6 animate-fade-in max-w-6xl">
+            <div className="space-y-6 animate-fade-in max-w-6xl w-full min-w-0">
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-white">Histórico de Avaliações</h1>
                         <p className="text-gray-400 mt-1">Lista completa de todos os feedbacks recebidos.</p>
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                        <div className="overflow-x-auto scrollbar-thin pb-1">
+                    <div className="flex flex-col gap-3 min-w-0">
+                        <div className="overflow-x-auto max-w-full scrollbar-thin pb-1">
                             <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                             {[
                                 { v: "7", l: "7 Dias" },
@@ -159,7 +159,7 @@ export default function AvaliacoesPage() {
                         </div>
                         </div>
 
-                        <div className="overflow-x-auto scrollbar-thin pb-1">
+                        <div className="overflow-x-auto max-w-full scrollbar-thin pb-1">
                             <div className="flex w-max bg-white/5 border border-white/10 p-1 rounded-xl">
                             {["TODOS", "SISTEMA", "MENTORIA", "AULA"].map(f => (
                                 <button
@@ -243,7 +243,7 @@ export default function AvaliacoesPage() {
                 </div>
 
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-w-full">
                         <table className="w-full min-w-[980px] text-left">
                             <thead className="bg-white/5 border-b border-white/10 whitespace-nowrap">
                                 <tr>

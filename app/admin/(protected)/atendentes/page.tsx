@@ -51,7 +51,7 @@ export default function AtendentesPage() {
 
     return (
         <>
-            <div className="space-y-6 md:space-y-8 animate-fade-in relative max-w-4xl">
+            <div className="space-y-6 md:space-y-8 animate-fade-in relative max-w-4xl w-full min-w-0">
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-white">Equipe de Atendimento</h1>
@@ -68,7 +68,7 @@ export default function AtendentesPage() {
                 </div>
 
                 <div className="glass rounded-2xl border border-white/10 overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto max-w-full">
                     <table className="w-full min-w-[720px] text-left">
                         <thead className="bg-white/5 border-b border-white/10">
                             <tr>
