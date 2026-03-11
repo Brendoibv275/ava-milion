@@ -103,8 +103,24 @@
     box-shadow: 0 0 30px rgba(1, 111, 230, 0.25);
   }
 
+  .glow-purple {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+  }
+
+  .glow-teal {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+  }
+
   .gradient-blue {
     background: linear-gradient(135deg, #016FE6 0%, #5B4DFF 100%);
+  }
+
+  .gradient-purple {
+    background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+  }
+
+  .gradient-teal {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
   }
 
   .gradient-text {

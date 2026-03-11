@@ -43,11 +43,18 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
     const motivosContato = getMotivosContatoByTipo(tipo);
     const isAula = tipo === "AULA";
     const isSuporte = tipo === "SISTEMA" || tipo === "MENTORIA";
+    const showCircle = tipo === "MENTORIA";
+
+    const [atendenteError, setAtendenteError] = useState(false);
 
     useEffect(() => {
         fetch(`/api/atendentes?suporte=${tipo}`)
-            .then((r) => r.json())
-            .then(setAtendentes);
+            .then((r) => {
+                if (!r.ok) throw new Error("Falha ao carregar");
+                return r.json();
+            })
+            .then(setAtendentes)
+            .catch(() => setAtendenteError(true));
     }, [tipo]);
 
     useEffect(() => {
@@ -76,7 +83,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
         if (!form.atendenteId) nextErrors.atendenteId = isAula ? "Selecione o professor." : "Selecione o atendente.";
         if (!form.recomenda) nextErrors.recomenda = "Selecione se recomenda ou não.";
         if (isAula && nota === null) nextErrors.nota = "Escolha uma nota para a aula.";
-        if (isSuporte && form.circleNota === "") nextErrors.circleNota = "Informe uma nota para a comunidade (Circle).";
+        if (showCircle && form.circleNota === "") nextErrors.circleNota = "Informe uma nota para a comunidade (Circle).";
         return nextErrors;
     };
 
@@ -120,15 +127,16 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                     ...form,
                     tipo,
                     nota,
-                    circleNota: isSuporte ? Number(form.circleNota) : null,
-                    circleSugestoes: isSuporte ? form.circleSugestoes : null,
+                    circleNota: showCircle ? Number(form.circleNota) : null,
+                    circleSugestoes: showCircle ? form.circleSugestoes : null,
                 }),
             });
 
             if (res.ok) {
                 router.push("/avaliacao/obrigado");
             } else {
-                setSubmitError("Erro ao enviar avaliação. Tente novamente.");
+                const body = await res.json().catch(() => null);
+                setSubmitError(body?.error || "Erro ao enviar avaliação. Tente novamente.");
             }
         } catch {
             setSubmitError("Erro de conexão. Tente novamente.");
@@ -312,7 +320,9 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                 {/* Atendente */}
                 <div className="glass rounded-2xl p-6 space-y-3">
                     <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">{isAula ? "Professor *" : "Atendente *"}</h2>
-                    {atendentes.length === 0 ? (
+                    {atendenteError ? (
+                        <p className="text-red-300 text-sm">Erro ao carregar {isAula ? "professores" : "atendentes"}. Recarregue a página.</p>
+                    ) : atendentes.length === 0 ? (
                         <p className="text-gray-500 text-sm">{isAula ? "Carregando professores..." : "Carregando atendentes..."}</p>
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -372,7 +382,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                     {errors.nota && <p className="text-red-300 text-sm">{errors.nota}</p>}
                 </div>
 
-                {isSuporte && (
+                {showCircle && (
                     <div className="glass rounded-2xl p-6 space-y-4">
                         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Avaliação da comunidade (Circle)</h2>
                         <div className="space-y-3">
@@ -483,7 +493,7 @@ export default function FormAvaliacao({ tipo, titulo, subtitulo, cor }: Props) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full min-h-11 py-4 rounded-2xl font-bold text-white text-lg transition-all ${cor} hover:opacity-90 active:scale-98 disabled:opacity-50 glow-blue`}
+                        className={`w-full min-h-11 py-4 rounded-2xl font-bold text-white text-lg transition-all ${cor} hover:opacity-90 active:scale-98 disabled:opacity-50 ${cor.replace("gradient-", "glow-")}`}
                     >
                         {loading ? "Enviando..." : "Enviar Avaliação"}
                     </button>

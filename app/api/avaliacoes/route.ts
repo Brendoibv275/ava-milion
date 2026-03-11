@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         }
 
         const circleNotaNormalizada =
-            tipo === "SISTEMA" || tipo === "MENTORIA"
+            tipo === "MENTORIA"
                 ? (circleNota === null || circleNota === undefined || circleNota === "" ? null : Number(circleNota))
                 : null;
         const notaNormalizada = Number(nota);
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Nota da comunidade inválida" }, { status: 400 });
         }
 
-        const { data: avaliacao, error } = await supabase
+        const { error } = await supabase
             .from("avaliacoes_atendimento")
             .insert({
                 tipo,
@@ -62,14 +62,12 @@ export async function POST(req: Request) {
                 sugestoesOutros: sugestoesOutros || null,
                 recomenda: recomenda === "SIM" ? true : false,
                 circleNota: circleNotaNormalizada,
-                circleSugestoes: tipo === "SISTEMA" || tipo === "MENTORIA" ? (circleSugestoes || null) : null,
-            })
-            .select()
-            .single();
+                circleSugestoes: tipo === "MENTORIA" ? (circleSugestoes || null) : null,
+            });
 
         if (error) throw error;
 
-        return NextResponse.json({ success: true, id: avaliacao.id });
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Erro ao salvar avaliação:", error);
         return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
