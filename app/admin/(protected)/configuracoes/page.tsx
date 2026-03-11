@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { UserCheck, UserX, Loader2, KeyRound } from "lucide-react";
+import { UserCheck, UserX, Loader2, KeyRound, Trash2 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
     const supabase = createClient();
@@ -15,6 +15,9 @@ export default function ConfiguracoesPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [passLoading, setPassLoading] = useState(false);
     const [passMsg, setPassMsg] = useState({ type: "", text: "" });
+    const [adminParaExcluir, setAdminParaExcluir] = useState<any>(null);
+    const [confirmacaoExclusao, setConfirmacaoExclusao] = useState("");
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     const loadUsuarios = async () => {
         setLoading(true);
@@ -68,6 +71,38 @@ export default function ConfiguracoesPage() {
             setConfirmPassword("");
         }
         setPassLoading(false);
+    };
+
+    const abrirModalExclusao = (admin: any) => {
+        setAdminParaExcluir(admin);
+        setConfirmacaoExclusao("");
+    };
+
+    const fecharModalExclusao = () => {
+        setAdminParaExcluir(null);
+        setConfirmacaoExclusao("");
+        setDeleteLoading(false);
+    };
+
+    const confirmarExclusaoAdmin = async () => {
+        if (!adminParaExcluir || confirmacaoExclusao.trim() !== "confirmar") return;
+
+        setDeleteLoading(true);
+        const response = await fetch(`/api/admin-users/${adminParaExcluir.id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ confirmation: confirmacaoExclusao.trim() }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            alert(data?.error || "Erro ao excluir administrador.");
+            setDeleteLoading(false);
+            return;
+        }
+
+        fecharModalExclusao();
+        loadUsuarios();
     };
 
     return (
@@ -165,15 +200,24 @@ export default function ConfiguracoesPage() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <button
-                                                onClick={() => toggleAprovacao(u.id, u.is_approved)}
-                                                className={`inline-flex items-center gap-2 px-3 py-2 min-h-11 rounded-lg text-sm font-medium transition-colors ${u.is_approved
-                                                    ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
-                                                    : "bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20"
-                                                    }`}
-                                            >
-                                                {u.is_approved ? <><UserX className="w-4 h-4" /> Revogar</> : <><UserCheck className="w-4 h-4" /> Aprovar</>}
-                                            </button>
+                                            <div className="inline-flex items-center gap-2">
+                                                <button
+                                                    onClick={() => toggleAprovacao(u.id, u.is_approved)}
+                                                    className={`inline-flex items-center gap-2 px-3 py-2 min-h-11 rounded-lg text-sm font-medium transition-colors ${u.is_approved
+                                                        ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
+                                                        : "bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20"
+                                                        }`}
+                                                >
+                                                    {u.is_approved ? <><UserX className="w-4 h-4" /> Revogar</> : <><UserCheck className="w-4 h-4" /> Aprovar</>}
+                                                </button>
+                                                <button
+                                                    onClick={() => abrirModalExclusao(u)}
+                                                    className="inline-flex items-center gap-2 px-3 py-2 min-h-11 rounded-lg text-sm font-medium transition-colors bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    Excluir
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -183,6 +227,46 @@ export default function ConfiguracoesPage() {
                     </div>
                 </div>
             </div>
+            {adminParaExcluir && (
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto flex justify-center pt-10 px-4 pb-10">
+                    <div className="glass p-6 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl animate-scale-in h-fit relative">
+                        <h3 className="text-lg font-bold text-white">Excluir administrador</h3>
+                        <p className="text-sm text-gray-300 mt-2">
+                            Você está prestes a excluir <span className="font-semibold text-white">{adminParaExcluir.email}</span>.
+                        </p>
+                        <p className="text-sm text-gray-400 mt-3">
+                            Para confirmar, digite <span className="font-semibold text-white">confirmar</span> no campo abaixo.
+                        </p>
+
+                        <input
+                            type="text"
+                            value={confirmacaoExclusao}
+                            onChange={(e) => setConfirmacaoExclusao(e.target.value)}
+                            className="w-full mt-4 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-red-500 focus:bg-white/10 transition-all outline-none"
+                            placeholder='Digite "confirmar"'
+                        />
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                type="button"
+                                onClick={fecharModalExclusao}
+                                disabled={deleteLoading}
+                                className="flex-1 py-3 text-gray-300 hover:bg-white/5 rounded-xl transition-colors border border-white/10 disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmarExclusaoAdmin}
+                                disabled={deleteLoading || confirmacaoExclusao.trim() !== "confirmar"}
+                                className="flex-1 py-3 bg-red-600 text-white hover:bg-red-500 rounded-xl font-medium transition-colors disabled:opacity-50"
+                            >
+                                {deleteLoading ? "Excluindo..." : "Excluir admin"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

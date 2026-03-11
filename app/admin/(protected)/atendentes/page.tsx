@@ -55,7 +55,7 @@ export default function AtendentesPage() {
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-white">Equipe de Atendimento</h1>
-                        <p className="text-gray-400 mt-1">Gerencie atendentes e professores por canal de suporte/aula.</p>
+                        <p className="text-gray-400 mt-1">Gerencie atendentes e professores por canal de suporte/aula. Para remover do uso, desative o cadastro (sem exclusão definitiva).</p>
                     </div>
                     <button
                         onClick={() => setNovoModal(true)}
@@ -99,6 +99,7 @@ export default function AtendentesPage() {
                                     <td className="p-4 text-right">
                                         <button
                                             onClick={() => toggleAtivo(a.id, a.ativo)}
+                                            title={a.ativo ? "Desativa sem excluir definitivamente" : "Reativa o cadastro"}
                                             className={`text-sm px-3 py-2 min-h-11 rounded-lg border transition-colors ${a.ativo ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-green-500/30 text-green-400 hover:bg-green-500/10"
                                                 }`}
                                         >

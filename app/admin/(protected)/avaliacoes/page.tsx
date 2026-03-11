@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, Filter, Star } from "lucide-react";
+import { Search, Filter, Star, Trash2 } from "lucide-react";
 import { SUGESTOES_AULA } from "@/lib/utils";
 
 export default function AvaliacoesPage() {
@@ -16,6 +16,7 @@ export default function AvaliacoesPage() {
     const [dataFim, setDataFim] = useState("");
     const [atendenteId, setAtendenteId] = useState("");
     const [detalhesSelecionados, setDetalhesSelecionados] = useState<any>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         setLoading(true);
@@ -126,6 +127,29 @@ export default function AvaliacoesPage() {
         if (nota >= 8) return "border-green-500/30 text-green-400 bg-green-500/10";
         if (nota >= 5) return "border-yellow-500/30 text-yellow-500 bg-yellow-500/10";
         return "border-red-500/30 text-red-400 bg-red-500/10";
+    };
+
+    const excluirAvaliacao = async (id: string) => {
+        const confirmado = window.confirm("Tem certeza que deseja excluir esta avaliação?");
+        if (!confirmado) return;
+
+        setDeletingId(id);
+        try {
+            const response = await fetch(`/api/avaliacoes/${id}`, { method: "DELETE" });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                alert(data?.error || "Não foi possível excluir a avaliação.");
+                return;
+            }
+
+            setAvaliacoes((prev) => prev.filter((item) => item.id !== id));
+        } catch (error) {
+            console.error("Erro ao excluir avaliação:", error);
+            alert("Erro inesperado ao excluir avaliação.");
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     return (
@@ -298,6 +322,14 @@ export default function AvaliacoesPage() {
                                                         title="Ver Detalhes"
                                                     >
                                                         <Search className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => excluirAvaliacao(A.id)}
+                                                        disabled={deletingId === A.id}
+                                                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50 rounded-lg text-red-400 hover:text-red-300 transition-colors border border-red-500/30 print:hidden"
+                                                        title="Excluir avaliação"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </td>
