@@ -106,6 +106,9 @@ export default function DashboardPage() {
             {/* Ranking */}
             <div className="glass p-4 md:p-6 rounded-2xl border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-6">Ranking de Atendentes</h2>
+                <p className="text-sm text-gray-400 mb-4">
+                    Ordenado por quantidade de atendimentos no período; a nota média é usada como critério de desempate.
+                </p>
                 <div className="overflow-x-auto max-w-full">
                     <table className="w-full min-w-[680px] text-left border-collapse">
                         <thead>

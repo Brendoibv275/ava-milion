@@ -69,7 +69,12 @@ export async function GET(req: Request) {
                 media: a.avaliacoes.reduce((s: any, av: any) => s + av.nota, 0) / a.avaliacoes.length,
                 categorias: a.categorias,
             }))
-            .sort((a, b) => b.media - a.media);
+            .sort((a, b) => {
+                // Prioriza quem mais atende; nota média entra apenas como desempate.
+                if (b.total !== a.total) return b.total - a.total;
+                if (b.media !== a.media) return b.media - a.media;
+                return a.nome.localeCompare(b.nome, "pt-BR");
+            });
 
         // Timeline chart
         const porDia: Record<string, { notas: number[]; tipo: string }> = {};
